@@ -10,7 +10,15 @@ engine = create_engine(
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Create tables
+# Dependency for FastAPI routes
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# Create tables on first run
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)
-    print("Tables created successfully")
+    print(" Tables created")
