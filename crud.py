@@ -1,8 +1,6 @@
-# crud.py
 from sqlalchemy.orm import Session
 from models import EmeraldLot, Counterparty, Trade
 import schemas
-from datetime import date
 
 # --- EmeraldLot ---
 def create_emerald(db: Session, emerald: schemas.EmeraldLotCreate):
@@ -15,6 +13,30 @@ def create_emerald(db: Session, emerald: schemas.EmeraldLotCreate):
 def get_emeralds(db: Session, skip: int = 0, limit: int = 100):
     return db.query(EmeraldLot).offset(skip).limit(limit).all()
 
+def get_emerald(db: Session, emerald_id: int):
+    """Fetch a single emerald by ID."""
+    return db.query(EmeraldLot).filter(EmeraldLot.id == emerald_id).first()
+
+def delete_emerald(db: Session, emerald_id: int):
+    """Delete emerald by ID and return the deleted object if found."""
+    emerald = get_emerald(db, emerald_id)
+    if emerald:
+        db.delete(emerald)
+        db.commit()
+        return emerald
+    return None
+    
+def update_emerald(db: Session, emerald_id: int, emerald: schemas.EmeraldLotCreate):
+    db_obj = db.query(EmeraldLot).filter(EmeraldLot.id == emerald_id).first()
+    if not db_obj:
+        return None
+    for field, value in emerald.dict().items():
+        setattr(db_obj, field, value)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+
 # --- Counterparty ---
 def create_counterparty(db: Session, cp: schemas.CounterpartyCreate):
     db_cp = Counterparty(**cp.dict())
@@ -26,6 +48,7 @@ def create_counterparty(db: Session, cp: schemas.CounterpartyCreate):
 def get_counterparties(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Counterparty).offset(skip).limit(limit).all()
 
+
 # --- Trade ---
 def create_trade(db: Session, trade: schemas.TradeCreate):
     db_trade = Trade(**trade.dict())
@@ -36,6 +59,7 @@ def create_trade(db: Session, trade: schemas.TradeCreate):
 
 def get_trades(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Trade).offset(skip).limit(limit).all()
+
 
 # --- Reports ---
 def get_inventory(db: Session):

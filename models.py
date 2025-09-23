@@ -31,7 +31,6 @@ class EmeraldLot(Base):
     treatment = Column(String)
     origin = Column(String)
     certificate_id = Column(String, nullable=True)
-    notes = Column(Text, nullable=True)
     status = Column(Enum(LotStatus), default=LotStatus.IN_STOCK)
 
     # Relationships

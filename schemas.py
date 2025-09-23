@@ -1,4 +1,3 @@
-# schemas.py
 from pydantic import BaseModel
 from typing import Optional
 from datetime import date
@@ -18,6 +17,7 @@ class TradeType(str, Enum):
     PURCHASE = "PURCHASE"
     SALE = "SALE"
 
+
 # --- EmeraldLot ---
 class EmeraldLotBase(BaseModel):
     lot_code: str
@@ -28,7 +28,6 @@ class EmeraldLotBase(BaseModel):
     treatment: Optional[str] = None
     origin: Optional[str] = None
     certificate_id: Optional[str] = None
-    notes: Optional[str] = None
     status: LotStatus = LotStatus.IN_STOCK
 
 class EmeraldLotCreate(EmeraldLotBase):
@@ -37,7 +36,8 @@ class EmeraldLotCreate(EmeraldLotBase):
 class EmeraldLotRead(EmeraldLotBase):
     id: int
     class Config:
-        from_attributes = True
+        orm_mode = True  # changed to orm_mode for consistency
+
 
 # --- Counterparty ---
 class CounterpartyBase(BaseModel):
@@ -54,6 +54,7 @@ class CounterpartyRead(CounterpartyBase):
     id: int
     class Config:
         orm_mode = True
+
 
 # --- Trade ---
 class TradeBase(BaseModel):

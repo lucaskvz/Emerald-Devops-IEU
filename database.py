@@ -18,7 +18,5 @@ def get_db():
     finally:
         db.close()
 
-# Create tables on first run
-if __name__ == "__main__":
-    Base.metadata.create_all(bind=engine)
-    print(" Tables created")
+#  Always create tables when imported
+Base.metadata.create_all(bind=engine)
