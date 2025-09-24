@@ -9,7 +9,8 @@ export const createEmerald = (payload) => axios.post(`${API_URL}/emeralds/`, pay
 export const updateEmerald = (id, payload) => axios.put(`${API_URL}/emeralds/${id}`, payload);
 export const deleteEmerald = (id) => axios.delete(`${API_URL}/emeralds/${id}`);
 
-// Counterparties (for later)
+// Counterparties 
+// Counterparties 
 export const listCounterparties = () => axios.get(`${API_URL}/counterparties/`);
 export const createCounterparty = (payload) => axios.post(`${API_URL}/counterparties/`, payload);
 export const updateCounterparty = (id, payload) => axios.put(`${API_URL}/counterparties/${id}`, payload);

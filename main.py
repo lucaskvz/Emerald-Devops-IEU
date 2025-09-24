@@ -42,12 +42,36 @@ def update_emerald(emerald_id: int, emerald: schemas.EmeraldLotCreate, db: Sessi
 
 # Counterparties
 @app.post("/counterparties/", response_model=schemas.CounterpartyRead)
-def create_counterparty(cp: schemas.CounterpartyCreate, db: Session = Depends(database.get_db)):
+def create_counterparty(
+    cp: schemas.CounterpartyCreate,
+    db: Session = Depends(database.get_db)
+):
     return crud.create_counterparty(db, cp)
 
+
 @app.get("/counterparties/", response_model=list[schemas.CounterpartyRead])
-def read_counterparties(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
+def read_counterparties(
+    skip: int = 0, limit: int = 100,
+    db: Session = Depends(database.get_db)
+):
     return crud.get_counterparties(db, skip, limit)
+
+
+@app.put("/counterparties/{cp_id}", response_model=schemas.CounterpartyRead)
+def update_counterparty(
+    cp_id: int,
+    cp: schemas.CounterpartyCreate,
+    db: Session = Depends(database.get_db)
+):
+    return crud.update_counterparty(db, cp_id, cp)
+
+
+@app.delete("/counterparties/{cp_id}", response_model=dict)
+def delete_counterparty(
+    cp_id: int,
+    db: Session = Depends(database.get_db)
+):
+    return crud.delete_counterparty(db, cp_id)
 
 # Trades
 @app.post("/trades/", response_model=schemas.TradeRead)

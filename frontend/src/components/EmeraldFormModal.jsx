@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import "./EmeraldFormModal.css";
+import "./ModalForm.css";
 
 const initialForm = {
   lot_code: "",

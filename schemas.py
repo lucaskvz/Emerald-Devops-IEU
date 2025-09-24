@@ -45,13 +45,22 @@ class CounterpartyBase(BaseModel):
     type: CounterpartyType
     contact_info: Optional[str] = None
     country: Optional[str] = None
-    kyc_notes: Optional[str] = None
+
 
 class CounterpartyCreate(CounterpartyBase):
     pass
 
+
+class CounterpartyUpdate(BaseModel):  # new schema for updates
+    name: Optional[str] = None
+    type: Optional[CounterpartyType] = None
+    contact_info: Optional[str] = None
+    country: Optional[str] = None
+
+
 class CounterpartyRead(CounterpartyBase):
     id: int
+
     class Config:
         orm_mode = True
 

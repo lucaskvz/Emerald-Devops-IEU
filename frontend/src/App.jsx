@@ -1,10 +1,17 @@
 import React, { useState } from "react";
 import "./App.css";
+
+// Import each section (full-page views)
+import Dashboard from "./sections/Dashboard";
 import Emeralds from "./sections/Emeralds";
+import Counterparties from "./sections/Counterparties";
+import Trades from "./sections/Trades";
 
 export default function App() {
+  // Track which menu item is active (controls which section shows in <main>)
   const [active, setActive] = useState("emeralds");
 
+  // Sidebar menu items
   const menu = [
     { key: "dashboard", label: "📊 Dashboard" },
     { key: "emeralds", label: "💎 Emerald Lots" },
@@ -32,16 +39,10 @@ export default function App() {
 
       {/* Main Content */}
       <main className="content">
-        {active === "dashboard" && (
-          <h1 className="page-title">📊 Dashboard (coming soon)</h1>
-        )}
+        {active === "dashboard" && <Dashboard />}
         {active === "emeralds" && <Emeralds />}
-        {active === "counterparties" && (
-          <h1 className="page-title">👥 Counterparties (coming soon)</h1>
-        )}
-        {active === "trades" && (
-          <h1 className="page-title">🔁 Trades (coming soon)</h1>
-        )}
+        {active === "counterparties" && <Counterparties />}
+        {active === "trades" && <Trades />}
       </main>
     </div>
   );

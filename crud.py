@@ -25,7 +25,7 @@ def delete_emerald(db: Session, emerald_id: int):
         db.commit()
         return emerald
     return None
-    
+
 def update_emerald(db: Session, emerald_id: int, emerald: schemas.EmeraldLotCreate):
     db_obj = db.query(EmeraldLot).filter(EmeraldLot.id == emerald_id).first()
     if not db_obj:
@@ -45,8 +45,29 @@ def create_counterparty(db: Session, cp: schemas.CounterpartyCreate):
     db.refresh(db_cp)
     return db_cp
 
+
 def get_counterparties(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Counterparty).offset(skip).limit(limit).all()
+
+
+def update_counterparty(db: Session, cp_id: int, cp: schemas.CounterpartyCreate):
+    db_cp = db.query(Counterparty).filter(Counterparty.id == cp_id).first()
+    if not db_cp:
+        return None  # or raise an HTTPException in the route
+    for key, value in cp.dict().items():
+        setattr(db_cp, key, value)
+    db.commit()
+    db.refresh(db_cp)
+    return db_cp
+
+
+def delete_counterparty(db: Session, cp_id: int):
+    db_cp = db.query(Counterparty).filter(Counterparty.id == cp_id).first()
+    if not db_cp:
+        return None  # or raise an HTTPException in the route
+    db.delete(db_cp)
+    db.commit()
+    return {"ok": True}
 
 
 # --- Trade ---
