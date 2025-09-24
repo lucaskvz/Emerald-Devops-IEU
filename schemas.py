@@ -76,10 +76,26 @@ class TradeBase(BaseModel):
     emerald_lot_id: int
     counterparty_id: int
 
+
 class TradeCreate(TradeBase):
     pass
 
+
+class TradeUpdate(BaseModel):  # allow partial updates
+    type: Optional[TradeType] = None
+    date: Optional[date] = None
+    currency: Optional[str] = None
+    unit_price: Optional[float] = None
+    total_price: Optional[float] = None
+    location: Optional[str] = None
+    emerald_lot_id: Optional[int] = None
+    counterparty_id: Optional[int] = None
+
+
 class TradeRead(TradeBase):
     id: int
+    roi: Optional[float] = None
+    holding_days: Optional[int] = None
+
     class Config:
         orm_mode = True

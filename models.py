@@ -62,9 +62,13 @@ class Trade(Base):
     total_price = Column(Float, nullable=False)
     location = Column(String, nullable=True)
 
+    # Optional computed metrics (useful for reports/P&L)
+    roi = Column(Float, nullable=True)
+    holding_days = Column(Integer, nullable=True)
+
     # Foreign keys
-    emerald_lot_id = Column(Integer, ForeignKey("emerald_lots.id"))
-    counterparty_id = Column(Integer, ForeignKey("counterparties.id"))
+    emerald_lot_id = Column(Integer, ForeignKey("emerald_lots.id"), nullable=False)
+    counterparty_id = Column(Integer, ForeignKey("counterparties.id"), nullable=False)
 
     # Relationships
     emerald_lot = relationship("EmeraldLot", back_populates="trades")

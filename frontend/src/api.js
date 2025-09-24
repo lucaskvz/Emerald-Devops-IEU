@@ -10,14 +10,15 @@ export const updateEmerald = (id, payload) => axios.put(`${API_URL}/emeralds/${i
 export const deleteEmerald = (id) => axios.delete(`${API_URL}/emeralds/${id}`);
 
 // Counterparties 
-// Counterparties 
+
 export const listCounterparties = () => axios.get(`${API_URL}/counterparties/`);
 export const createCounterparty = (payload) => axios.post(`${API_URL}/counterparties/`, payload);
 export const updateCounterparty = (id, payload) => axios.put(`${API_URL}/counterparties/${id}`, payload);
 export const deleteCounterparty = (id) => axios.delete(`${API_URL}/counterparties/${id}`);
 
-// Trades (for later)
+// Trades 
 export const listTrades = () => axios.get(`${API_URL}/trades/`);
+export const getTrade = (id) => axios.get(`${API_URL}/trades/${id}`);   //  optional
 export const createTrade = (payload) => axios.post(`${API_URL}/trades/`, payload);
 export const updateTrade = (id, payload) => axios.put(`${API_URL}/trades/${id}`, payload);
 export const deleteTrade = (id) => axios.delete(`${API_URL}/trades/${id}`);

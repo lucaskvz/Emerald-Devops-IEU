@@ -10,24 +10,18 @@ def create_emerald(db: Session, emerald: schemas.EmeraldLotCreate):
     db.refresh(db_emerald)
     return db_emerald
 
+
 def get_emeralds(db: Session, skip: int = 0, limit: int = 100):
     return db.query(EmeraldLot).offset(skip).limit(limit).all()
+
 
 def get_emerald(db: Session, emerald_id: int):
     """Fetch a single emerald by ID."""
     return db.query(EmeraldLot).filter(EmeraldLot.id == emerald_id).first()
 
-def delete_emerald(db: Session, emerald_id: int):
-    """Delete emerald by ID and return the deleted object if found."""
-    emerald = get_emerald(db, emerald_id)
-    if emerald:
-        db.delete(emerald)
-        db.commit()
-        return emerald
-    return None
 
 def update_emerald(db: Session, emerald_id: int, emerald: schemas.EmeraldLotCreate):
-    db_obj = db.query(EmeraldLot).filter(EmeraldLot.id == emerald_id).first()
+    db_obj = get_emerald(db, emerald_id)
     if not db_obj:
         return None
     for field, value in emerald.dict().items():
@@ -35,6 +29,15 @@ def update_emerald(db: Session, emerald_id: int, emerald: schemas.EmeraldLotCrea
     db.commit()
     db.refresh(db_obj)
     return db_obj
+
+
+def delete_emerald(db: Session, emerald_id: int):
+    emerald = get_emerald(db, emerald_id)
+    if emerald:
+        db.delete(emerald)
+        db.commit()
+        return emerald
+    return None
 
 
 # --- Counterparty ---
@@ -50,11 +53,16 @@ def get_counterparties(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Counterparty).offset(skip).limit(limit).all()
 
 
-def update_counterparty(db: Session, cp_id: int, cp: schemas.CounterpartyCreate):
-    db_cp = db.query(Counterparty).filter(Counterparty.id == cp_id).first()
+def get_counterparty(db: Session, cp_id: int):
+    return db.query(Counterparty).filter(Counterparty.id == cp_id).first()
+
+
+def update_counterparty(db: Session, cp_id: int, cp: schemas.CounterpartyUpdate):
+    db_cp = get_counterparty(db, cp_id)
     if not db_cp:
-        return None  # or raise an HTTPException in the route
-    for key, value in cp.dict().items():
+        return None
+    update_data = cp.dict(exclude_unset=True)  # ✅ allow partial updates
+    for key, value in update_data.items():
         setattr(db_cp, key, value)
     db.commit()
     db.refresh(db_cp)
@@ -62,12 +70,12 @@ def update_counterparty(db: Session, cp_id: int, cp: schemas.CounterpartyCreate)
 
 
 def delete_counterparty(db: Session, cp_id: int):
-    db_cp = db.query(Counterparty).filter(Counterparty.id == cp_id).first()
+    db_cp = get_counterparty(db, cp_id)
     if not db_cp:
-        return None  # or raise an HTTPException in the route
+        return None
     db.delete(db_cp)
     db.commit()
-    return {"ok": True}
+    return db_cp
 
 
 # --- Trade ---
@@ -78,24 +86,52 @@ def create_trade(db: Session, trade: schemas.TradeCreate):
     db.refresh(db_trade)
     return db_trade
 
+
 def get_trades(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Trade).offset(skip).limit(limit).all()
 
 
+def get_trade(db: Session, trade_id: int):
+    return db.query(Trade).filter(Trade.id == trade_id).first()
+
+
+def update_trade(db: Session, trade_id: int, trade: schemas.TradeUpdate):
+    db_trade = get_trade(db, trade_id)
+    if not db_trade:
+        return None
+    update_data = trade.dict(exclude_unset=True)  # ✅ supports partial updates
+    for key, value in update_data.items():
+        setattr(db_trade, key, value)
+    db.commit()
+    db.refresh(db_trade)
+    return db_trade
+
+
+def delete_trade(db: Session, trade_id: int):
+    db_trade = get_trade(db, trade_id)
+    if not db_trade:
+        return None
+    db.delete(db_trade)
+    db.commit()
+    return db_trade
+
+
 # --- Reports ---
 def get_inventory(db: Session):
+    """Return emerald lots currently in stock."""
     return db.query(EmeraldLot).filter(EmeraldLot.status == "IN_STOCK").all()
 
+
 def get_pnl(db: Session):
-    # Sum revenues - costs
-    total_cost = db.query(Trade).filter(Trade.type == "PURCHASE").with_entities(
-        (Trade.total_price).label("total_cost")
-    )
-    total_revenue = db.query(Trade).filter(Trade.type == "SALE").with_entities(
-        (Trade.total_price).label("total_revenue")
-    )
+    """Compute total cost, revenue, and profit from trades."""
+    purchases = db.query(Trade).filter(Trade.type == "PURCHASE").all()
+    sales = db.query(Trade).filter(Trade.type == "SALE").all()
+
+    total_cost = sum(t.total_price for t in purchases)
+    total_revenue = sum(t.total_price for t in sales)
+
     return {
-        "total_cost": sum([c.total_cost for c in total_cost]),
-        "total_revenue": sum([r.total_revenue for r in total_revenue]),
-        "profit": sum([r.total_revenue for r in total_revenue]) - sum([c.total_cost for c in total_cost]),
+        "total_cost": total_cost,
+        "total_revenue": total_revenue,
+        "profit": total_revenue - total_cost,
     }

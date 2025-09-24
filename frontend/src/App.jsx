@@ -8,8 +8,8 @@ import Counterparties from "./sections/Counterparties";
 import Trades from "./sections/Trades";
 
 export default function App() {
-  // Track which menu item is active (controls which section shows in <main>)
-  const [active, setActive] = useState("emeralds");
+  // Default to dashboard when app loads
+  const [active, setActive] = useState("dashboard");
 
   // Sidebar menu items
   const menu = [

@@ -78,9 +78,34 @@ def delete_counterparty(
 def create_trade(trade: schemas.TradeCreate, db: Session = Depends(database.get_db)):
     return crud.create_trade(db, trade)
 
+
 @app.get("/trades/", response_model=list[schemas.TradeRead])
 def read_trades(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
     return crud.get_trades(db, skip, limit)
+
+
+@app.get("/trades/{trade_id}", response_model=schemas.TradeRead)
+def read_trade(trade_id: int, db: Session = Depends(database.get_db)):
+    db_trade = crud.get_trade(db, trade_id)
+    if not db_trade:
+        raise HTTPException(status_code=404, detail="Trade not found")
+    return db_trade
+
+
+@app.put("/trades/{trade_id}", response_model=schemas.TradeRead)
+def update_trade(trade_id: int, trade: schemas.TradeUpdate, db: Session = Depends(database.get_db)):
+    db_trade = crud.update_trade(db, trade_id, trade)
+    if not db_trade:
+        raise HTTPException(status_code=404, detail="Trade not found")
+    return db_trade
+
+
+@app.delete("/trades/{trade_id}", response_model=schemas.TradeRead)
+def delete_trade(trade_id: int, db: Session = Depends(database.get_db)):
+    db_trade = crud.delete_trade(db, trade_id)
+    if not db_trade:
+        raise HTTPException(status_code=404, detail="Trade not found")
+    return db_trade
 
 # Reports
 @app.get("/reports/inventory")
