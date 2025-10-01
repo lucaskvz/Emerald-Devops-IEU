@@ -1,3 +1,9 @@
+"""
+I define Pydantic schemas for request/response validation.
+I use model_config with from_attributes for Pydantic v2 (replaces orm_mode).
+I created separate schemas for Create and Update to support partial updates.
+"""
+
 from pydantic import BaseModel
 from typing import Optional
 from datetime import date
@@ -35,8 +41,7 @@ class EmeraldLotCreate(EmeraldLotBase):
 
 class EmeraldLotRead(EmeraldLotBase):
     id: int
-    class Config:
-        orm_mode = True  # changed to orm_mode for consistency
+    model_config = {"from_attributes": True}
 
 
 # --- Counterparty ---
@@ -60,9 +65,7 @@ class CounterpartyUpdate(BaseModel):  # new schema for updates
 
 class CounterpartyRead(CounterpartyBase):
     id: int
-
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 
 # --- Trade ---
@@ -96,6 +99,4 @@ class TradeRead(TradeBase):
     id: int
     roi: Optional[float] = None
     holding_days: Optional[int] = None
-
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}

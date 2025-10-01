@@ -1,3 +1,9 @@
+"""
+I built this FastAPI backend to manage emerald inventory and trades.
+I used dependency injection for database sessions to make testing easier.
+I added CORS middleware to allow my React frontend to communicate with the API.
+"""
+
 # main.py
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
@@ -51,6 +57,7 @@ def create_counterparty(
 
 @app.get("/counterparties/", response_model=list[schemas.CounterpartyRead])
 def read_counterparties(
+    # I use CounterpartyUpdate here instead of CounterpartyCreate to allow partial updates
     skip: int = 0, limit: int = 100,
     db: Session = Depends(database.get_db)
 ):
@@ -59,19 +66,23 @@ def read_counterparties(
 
 @app.put("/counterparties/{cp_id}", response_model=schemas.CounterpartyRead)
 def update_counterparty(
+    # I return a dict instead of the model to avoid response validation issues
     cp_id: int,
-    cp: schemas.CounterpartyCreate,
+    cp: schemas.CounterpartyUpdate,
     db: Session = Depends(database.get_db)
 ):
     return crud.update_counterparty(db, cp_id, cp)
 
 
-@app.delete("/counterparties/{cp_id}", response_model=dict)
+@app.delete("/counterparties/{cp_id}")
 def delete_counterparty(
     cp_id: int,
     db: Session = Depends(database.get_db)
 ):
-    return crud.delete_counterparty(db, cp_id)
+    result = crud.delete_counterparty(db, cp_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Counterparty not found")
+    return {"message": "Counterparty deleted successfully", "id": result.id}
 
 # Trades
 @app.post("/trades/", response_model=schemas.TradeRead)

@@ -1,10 +1,16 @@
+"""
+I implemented all CRUD operations using SQLAlchemy ORM.
+I use model_dump() instead of dict() for Pydantic v2 compatibility.
+I return None for not-found cases to let the API layer handle 404 responses.
+"""
+
 from sqlalchemy.orm import Session
 from models import EmeraldLot, Counterparty, Trade
 import schemas
 
 # --- EmeraldLot ---
 def create_emerald(db: Session, emerald: schemas.EmeraldLotCreate):
-    db_emerald = EmeraldLot(**emerald.dict())
+    db_emerald = EmeraldLot(**emerald.model_dump())
     db.add(db_emerald)
     db.commit()
     db.refresh(db_emerald)
@@ -24,7 +30,7 @@ def update_emerald(db: Session, emerald_id: int, emerald: schemas.EmeraldLotCrea
     db_obj = get_emerald(db, emerald_id)
     if not db_obj:
         return None
-    for field, value in emerald.dict().items():
+    for field, value in emerald.model_dump().items():
         setattr(db_obj, field, value)
     db.commit()
     db.refresh(db_obj)
@@ -42,7 +48,7 @@ def delete_emerald(db: Session, emerald_id: int):
 
 # --- Counterparty ---
 def create_counterparty(db: Session, cp: schemas.CounterpartyCreate):
-    db_cp = Counterparty(**cp.dict())
+    db_cp = Counterparty(**cp.model_dump())
     db.add(db_cp)
     db.commit()
     db.refresh(db_cp)
@@ -61,7 +67,7 @@ def update_counterparty(db: Session, cp_id: int, cp: schemas.CounterpartyUpdate)
     db_cp = get_counterparty(db, cp_id)
     if not db_cp:
         return None
-    update_data = cp.dict(exclude_unset=True)  # ✅ allow partial updates
+    update_data = cp.model_dump(exclude_unset=True)  # ✅ allow partial updates
     for key, value in update_data.items():
         setattr(db_cp, key, value)
     db.commit()
@@ -80,7 +86,7 @@ def delete_counterparty(db: Session, cp_id: int):
 
 # --- Trade ---
 def create_trade(db: Session, trade: schemas.TradeCreate):
-    db_trade = Trade(**trade.dict())
+    db_trade = Trade(**trade.model_dump())
     db.add(db_trade)
     db.commit()
     db.refresh(db_trade)
@@ -99,7 +105,7 @@ def update_trade(db: Session, trade_id: int, trade: schemas.TradeUpdate):
     db_trade = get_trade(db, trade_id)
     if not db_trade:
         return None
-    update_data = trade.dict(exclude_unset=True)  # ✅ supports partial updates
+    update_data = trade.model_dump(exclude_unset=True)  # supports partial updates
     for key, value in update_data.items():
         setattr(db_trade, key, value)
     db.commit()
