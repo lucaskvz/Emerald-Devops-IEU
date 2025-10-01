@@ -7,22 +7,7 @@ I created separate schemas for Create and Update to support partial updates.
 from pydantic import BaseModel
 from typing import Optional
 from datetime import date
-from enum import Enum
-
-# --- Enums (match models.py) ---
-class LotStatus(str, Enum):
-    IN_STOCK = "IN_STOCK"
-    SOLD = "SOLD"
-
-class CounterpartyType(str, Enum):
-    SUPPLIER = "SUPPLIER"
-    BUYER = "BUYER"
-    BOTH = "BOTH"
-
-class TradeType(str, Enum):
-    PURCHASE = "PURCHASE"
-    SALE = "SALE"
-
+from models import LotStatus, CounterpartyType, TradeType
 
 # --- EmeraldLot ---
 class EmeraldLotBase(BaseModel):

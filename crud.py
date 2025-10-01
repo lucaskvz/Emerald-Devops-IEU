@@ -5,7 +5,7 @@ I return None for not-found cases to let the API layer handle 404 responses.
 """
 
 from sqlalchemy.orm import Session
-from models import EmeraldLot, Counterparty, Trade
+from models import EmeraldLot, Counterparty, Trade, LotStatus, TradeType
 import schemas
 
 # --- EmeraldLot ---
@@ -125,13 +125,13 @@ def delete_trade(db: Session, trade_id: int):
 # --- Reports ---
 def get_inventory(db: Session):
     """Return emerald lots currently in stock."""
-    return db.query(EmeraldLot).filter(EmeraldLot.status == "IN_STOCK").all()
+    return db.query(EmeraldLot).filter(EmeraldLot.status == LotStatus.IN_STOCK).all()
 
 
 def get_pnl(db: Session):
     """Compute total cost, revenue, and profit from trades."""
-    purchases = db.query(Trade).filter(Trade.type == "PURCHASE").all()
-    sales = db.query(Trade).filter(Trade.type == "SALE").all()
+    purchases = db.query(Trade).filter(Trade.type == TradeType.PURCHASE).all()
+    sales = db.query(Trade).filter(Trade.type == TradeType.SALE).all()
 
     total_cost = sum(t.total_price for t in purchases)
     total_revenue = sum(t.total_price for t in sales)
