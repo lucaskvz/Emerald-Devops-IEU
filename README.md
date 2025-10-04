@@ -226,7 +226,7 @@ This project was developed with AI assistance to accelerate development and ensu
 
 ---
 
-**Repository:** [GitHub Repository Link]  
+**Repository:** [https://github.com/lucaskvz/Emerald-Devops-IEU.git]  
 **Documentation:** Available in `/docs` directory  
 **API Reference:** http://localhost:8000/docs  
 **Test Coverage:** Available in `/htmlcov` directory
