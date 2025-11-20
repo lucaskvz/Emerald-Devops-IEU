@@ -11,18 +11,33 @@ import crud, schemas, database
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import HTTPException
 
-
+# Constants
+CORS_ORIGIN = "http://localhost:3000"
+ERROR_EMERALD_NOT_FOUND = "Emerald not found"
+ERROR_COUNTERPARTY_NOT_FOUND = "Counterparty not found"
+ERROR_TRADE_NOT_FOUND = "Trade not found"
+SUCCESS_COUNTERPARTY_DELETED = "Counterparty deleted successfully"
 
 app = FastAPI(title="Emerald Ledger API")
 
 # Allow React frontend to talk to backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_origins=[CORS_ORIGIN],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _raise_not_found(entity_name: str):
+    """Helper to raise 404 HTTPException for not found entities."""
+    error_messages = {
+        "Emerald": ERROR_EMERALD_NOT_FOUND,
+        "Counterparty": ERROR_COUNTERPARTY_NOT_FOUND,
+        "Trade": ERROR_TRADE_NOT_FOUND,
+    }
+    raise HTTPException(status_code=404, detail=error_messages.get(entity_name, "Not found"))
 
 
 # Emeralds
@@ -36,9 +51,9 @@ def read_emeralds(skip: int = 0, limit: int = 100, db: Session = Depends(databas
 
 @app.delete("/emeralds/{emerald_id}", response_model=schemas.EmeraldLotRead)
 def delete_emerald(emerald_id: int, db: Session = Depends(database.get_db)):
-    db_emerald = crud.get_emerald(db, emerald_id)  # you'll need this helper
+    db_emerald = crud.get_emerald(db, emerald_id)
     if not db_emerald:
-        raise HTTPException(status_code=404, detail="Emerald not found")
+        _raise_not_found("Emerald")
     return crud.delete_emerald(db, emerald_id)
 
 @app.put("/emeralds/{emerald_id}", response_model=schemas.EmeraldLotRead)
@@ -79,10 +94,15 @@ def delete_counterparty(
     cp_id: int,
     db: Session = Depends(database.get_db)
 ):
-    result = crud.delete_counterparty(db, cp_id)
-    if not result:
-        raise HTTPException(status_code=404, detail="Counterparty not found")
-    return {"message": "Counterparty deleted successfully", "id": result.id}
+    try:
+        result = crud.delete_counterparty(db, cp_id)
+        if not result:
+            _raise_not_found("Counterparty")
+        return {"message": SUCCESS_COUNTERPARTY_DELETED, "id": result.id}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete counterparty: {str(e)}")
 
 # Trades
 @app.post("/trades/", response_model=schemas.TradeRead)
@@ -99,7 +119,7 @@ def read_trades(skip: int = 0, limit: int = 100, db: Session = Depends(database.
 def read_trade(trade_id: int, db: Session = Depends(database.get_db)):
     db_trade = crud.get_trade(db, trade_id)
     if not db_trade:
-        raise HTTPException(status_code=404, detail="Trade not found")
+        _raise_not_found("Trade")
     return db_trade
 
 
@@ -107,7 +127,7 @@ def read_trade(trade_id: int, db: Session = Depends(database.get_db)):
 def update_trade(trade_id: int, trade: schemas.TradeUpdate, db: Session = Depends(database.get_db)):
     db_trade = crud.update_trade(db, trade_id, trade)
     if not db_trade:
-        raise HTTPException(status_code=404, detail="Trade not found")
+        _raise_not_found("Trade")
     return db_trade
 
 
@@ -115,7 +135,7 @@ def update_trade(trade_id: int, trade: schemas.TradeUpdate, db: Session = Depend
 def delete_trade(trade_id: int, db: Session = Depends(database.get_db)):
     db_trade = crud.delete_trade(db, trade_id)
     if not db_trade:
-        raise HTTPException(status_code=404, detail="Trade not found")
+        _raise_not_found("Trade")
     return db_trade
 
 # Reports

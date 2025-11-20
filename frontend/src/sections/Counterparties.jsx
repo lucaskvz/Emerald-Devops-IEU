@@ -51,6 +51,9 @@ export default function Counterparties() {
         await fetchCounterparties();
       }
     } catch (e) {
+      // Show error message to user
+      const errorMessage = e.response?.data?.detail || e.message || "Failed to delete counterparty";
+      alert(`Delete failed: ${errorMessage}`);
       console.error("Delete failed:", e);
     } finally {
       setIsConfirmOpen(false);
