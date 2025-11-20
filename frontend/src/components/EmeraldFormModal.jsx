@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./ModalForm.css";
 
+// Constants
+const VALID_STATUSES = ["IN_STOCK", "SOLD"];
+
 const initialForm = {
   lot_code: "",
   carat: "",
@@ -11,6 +14,41 @@ const initialForm = {
   origin: "",
   certificate_id: "",
   status: "IN_STOCK",
+};
+
+// Data transformation utility (Single Responsibility Principle)
+const transformFormDataToPayload = (formData) => {
+  const payload = { ...formData };
+  
+  // Convert carat from string to float (required field)
+  if (payload.carat === "" || payload.carat === null || payload.carat === undefined) {
+    throw new Error("Carat is required and must be a number");
+  }
+  payload.carat = parseFloat(payload.carat);
+  if (isNaN(payload.carat)) {
+    throw new Error("Carat must be a valid number");
+  }
+  
+  // Validate lot_code (required field)
+  if (!payload.lot_code || payload.lot_code.trim() === "") {
+    throw new Error("Lot code is required");
+  }
+  payload.lot_code = payload.lot_code.trim();
+  
+  // Convert empty strings to null for optional fields
+  const optionalStringFields = ["shape", "color_grade", "clarity", "treatment", "origin", "certificate_id"];
+  optionalStringFields.forEach(field => {
+    if (payload[field] === "") {
+      payload[field] = null;
+    }
+  });
+  
+  // Validate and normalize status
+  if (!VALID_STATUSES.includes(payload.status)) {
+    payload.status = "IN_STOCK"; // Default to valid status
+  }
+  
+  return payload;
 };
 
 export default function EmeraldFormModal({
@@ -28,7 +66,25 @@ export default function EmeraldFormModal({
   // --- Load data into form when modal opens ---
   useEffect(() => {
     if (isOpen) {
-      setForm(initialData ? { ...initialForm, ...initialData } : initialForm);
+      if (initialData) {
+        // Convert API response data to form format (handle type conversions)
+        const formData = {
+          ...initialForm,
+          ...initialData,
+          // Ensure carat is a string for the input field
+          carat: initialData.carat != null ? String(initialData.carat) : "",
+          // Ensure optional fields are strings or empty
+          shape: initialData.shape || "",
+          color_grade: initialData.color_grade || "",
+          clarity: initialData.clarity || "",
+          treatment: initialData.treatment || "",
+          origin: initialData.origin || "",
+          certificate_id: initialData.certificate_id || "",
+        };
+        setForm(formData);
+      } else {
+        setForm(initialForm);
+      }
       setStep(0);
     }
   }, [isOpen, initialData]);
@@ -64,9 +120,17 @@ export default function EmeraldFormModal({
   const prev = () => setStep((s) => Math.max(s - 1, 0));
 
   const doSave = () => {
-    const handler = typeof onSave === "function" ? onSave : onSubmit;
-    if (typeof handler === "function") handler(form);
-    doClose();
+    try {
+      // Transform and validate form data
+      const payload = transformFormDataToPayload(form);
+      
+      const handler = typeof onSave === "function" ? onSave : onSubmit;
+      if (typeof handler === "function") handler(payload);
+      doClose();
+    } catch (error) {
+      // Show validation error to user
+      alert(error.message || "Please fill in all required fields");
+    }
   };
 
   const clickOverlay = (e) => {
@@ -89,6 +153,7 @@ export default function EmeraldFormModal({
           <>
             <input
               name="lot_code"
+              required
               placeholder="Lot Code"
               value={form.lot_code}
               onChange={handleChange}
@@ -97,6 +162,9 @@ export default function EmeraldFormModal({
             <input
               name="carat"
               type="number"
+              step="0.01"
+              min="0"
+              required
               placeholder="Carat"
               value={form.carat}
               onChange={handleChange}
@@ -173,7 +241,6 @@ export default function EmeraldFormModal({
             <select name="status" value={form.status} onChange={handleChange}>
               <option value="IN_STOCK">In Stock</option>
               <option value="SOLD">Sold</option>
-              <option value="RESERVED">Reserved</option>
             </select>
           </>
         )}
