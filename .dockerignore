@@ -1,0 +1,8 @@
+.venv
+__pycache__
+.git
+htmlcov
+*.db
+!emerald.db
+tests
+.pytest_cache
