@@ -30,7 +30,6 @@ jobs:
 
       # -------------------------------------------
       # DEBUG: PRINT THE REGISTRY NAME
-      # -------------------------------------------
       - name: Debug Registry Name
         run: echo "Registry = ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}"
 
