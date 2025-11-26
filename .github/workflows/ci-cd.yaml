@@ -2,16 +2,22 @@ name: CI-CD Pipeline
 
 on:
   push:
-    branches: ["dockerization"]
+    branches: ["dockerization"]   # ONLY runs on dockerization branch
 
 jobs:
   build-test:
     runs-on: ubuntu-latest
 
     steps:
+      # -------------------------------------------
+      # CHECK OUT SOURCE CODE
+      # -------------------------------------------
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # -------------------------------------------
+      # PYTHON SETUP + TESTS
+      # -------------------------------------------
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -24,16 +30,22 @@ jobs:
         run: pytest --maxfail=1 --disable-warnings
 
       # -------------------------------------------
-      # BUILD DOCKER IMAGE WITH CORRECT NAME
+      # DEBUG: PRINT THE REGISTRY NAME
+      # -------------------------------------------
+      - name: Debug Registry Name
+        run: echo "Registry = ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}"
+
+      # -------------------------------------------
+      # BUILD DOCKER IMAGE CORRECTLY
       # -------------------------------------------
       - name: Build Docker image
         run: |
-          docker build \
-            -t ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/emerald-app:latest \
-            .
+          IMAGE="${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/emerald-app:latest"
+          echo "Building image: $IMAGE"
+          docker build -t "$IMAGE" .
 
       # -------------------------------------------
-      # AUTH TO ACR
+      # LOGIN TO ACR
       # -------------------------------------------
       - name: Login to ACR
         run: |
@@ -41,24 +53,32 @@ jobs:
             -u ${{ secrets.AZURE_REGISTRY_USERNAME }} --password-stdin
 
       # -------------------------------------------
-      # PUSH LATEST TAG
+      # PUSH TO ACR
       # -------------------------------------------
       - name: Push image to ACR
         run: |
-          docker push ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/emerald-app:latest
+          IMAGE="${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/emerald-app:latest"
+          echo "Pushing image: $IMAGE"
+          docker push "$IMAGE"
 
+  # =========================================================
+  # DEPLOY TO AZURE WEB APP FOR CONTAINERS
+  # =========================================================
   deploy:
     needs: build-test
     runs-on: ubuntu-latest
 
     steps:
+      # -------------------------------------------
+      # LOGIN TO AZURE USING SERVICE PRINCIPAL
+      # -------------------------------------------
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       # -------------------------------------------
-      # DEPLOY EXACT IMAGE THAT AZURE EXPECTS
+      # DEPLOY THE EXACT SAME IMAGE YOU BUILT
       # -------------------------------------------
       - name: Deploy to Web App
         uses: azure/webapps-deploy@v2
