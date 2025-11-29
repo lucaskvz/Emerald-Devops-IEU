@@ -2,7 +2,7 @@ name: CD Pipeline
 
 on:
   push:
-    branches: ["dockerization"]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
