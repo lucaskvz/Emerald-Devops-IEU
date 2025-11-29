@@ -31,13 +31,13 @@ jobs:
         run: pytest --maxfail=1 --disable-warnings
 
       # -------------------------------------------
-      # DEBUG: PRINT THE REGISTRY NAME
+      # DEBUG ACR LOGIN SERVER
       # -------------------------------------------
       - name: Debug Registry Name
         run: echo "Registry = ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}"
 
       # -------------------------------------------
-      # BUILD DOCKER IMAGE CORRECTLY
+      # BUILD DOCKER IMAGE
       # -------------------------------------------
       - name: Build Docker image
         run: |
@@ -54,7 +54,7 @@ jobs:
             -u ${{ secrets.AZURE_REGISTRY_USERNAME }} --password-stdin
 
       # -------------------------------------------
-      # PUSH TO ACR
+      # PUSH IMAGE
       # -------------------------------------------
       - name: Push image to ACR
         run: |
@@ -80,15 +80,15 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       # -------------------------------------------
-      # DEBUG WEBAPP NAME (IMPORTANT!)
+      # DEBUG: WEB APP NAME
       # -------------------------------------------
       - name: Debug WebApp name
-        run: echo "WEBAPP=$AZURE_WEBAPP_NAME"
+        run: echo "Deploying to WebApp = $AZURE_WEBAPP_NAME"
         env:
           AZURE_WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
 
       # -------------------------------------------
-      # DEPLOY THE EXACT SAME IMAGE YOU BUILT
+      # DEPLOY CONTAINER IMAGE
       # -------------------------------------------
       - name: Deploy to Web App
         uses: azure/webapps-deploy@v2
