@@ -275,25 +275,34 @@ The CD pipeline requires the following GitHub secrets:
 
 ### `/metrics`
 
-**Purpose**: Basic monitoring metrics for application observability.
+**Purpose**: Comprehensive monitoring metrics for application observability and performance tracking.
 
 **Method**: `GET`
 
 **Response**:
 ```json
 {
-  "uptime_seconds": 12345.67,
-  "total_requests": 42
+  "uptime_seconds": 1234.56,
+  "total_requests": 42,
+  "total_errors": 3,
+  "average_latency_ms": 4.87
 }
 ```
 
 **Metrics Explained**:
 - `uptime_seconds`: Time elapsed since application startup (in seconds)
-- `total_requests`: Total number of HTTP requests processed since startup (tracked via middleware)
+- `total_requests`: Total number of HTTP requests processed since startup
+- `total_errors`: Total number of HTTP errors encountered (4xx, 5xx status codes and unhandled exceptions)
+- `average_latency_ms`: Average request processing time in milliseconds
 
-**Implementation**: 
-- Uptime calculated from `startup_time` (recorded at application startup)
-- Request count incremented by `metrics_middleware` on each HTTP request
+**Monitoring Middleware Implementation**: 
+The `metrics_middleware` tracks the following metrics for each HTTP request:
+- **Total Requests**: Incremented on every incoming HTTP request
+- **Total Errors**: Counts HTTP 4xx and 5xx responses, as well as unhandled exceptions
+- **Average Latency**: Calculated from the cumulative latency of all requests divided by total request count (in milliseconds)
+- **Uptime**: Calculated from `startup_time` recorded at application startup
+
+The middleware uses `time.perf_counter()` for high-precision latency measurement and tracks errors by monitoring response status codes and catching exceptions during request processing.
 
 ### Accessing Monitoring Endpoints
 
