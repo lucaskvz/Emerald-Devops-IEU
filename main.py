@@ -36,14 +36,38 @@ app.add_middleware(
 
 startup_time = time.time()
 request_count = 0
+error_count = 0
+total_latency_seconds = 0.0
 
 
 @app.middleware("http")
 async def metrics_middleware(request: Request, call_next):
-    """Middleware to count total requests."""
-    global request_count
+    """
+    Middleware tracking:
+    - total requests
+    - total errors (4xx, 5xx, exceptions)
+    - total latency
+    """
+    global request_count, error_count, total_latency_seconds
+
+    start_time = time.perf_counter()
     request_count += 1
-    response = await call_next(request)
+
+    try:
+        response = await call_next(request)
+    except Exception:
+        # Track unhandled exceptions as errors
+        error_count += 1
+        raise
+
+    # Time spent processing the request
+    latency = time.perf_counter() - start_time
+    total_latency_seconds += latency
+
+    # Count HTTP 4xx and 5xx responses
+    if response.status_code >= 400:
+        error_count += 1
+
     return response
 
 
@@ -55,12 +79,19 @@ def health():
 
 @app.get("/metrics")
 def metrics():
-    """Basic monitoring metrics required for assignment."""
-    uptime = time.time() - startup_time
+    """Monitoring metrics required for assignment (requests, errors, latency, uptime)."""
+    uptime_seconds = time.time() - startup_time
+
+    avg_latency_ms = (
+        (total_latency_seconds / request_count) * 1000
+        if request_count > 0 else 0
+    )
 
     return {
-        "uptime_seconds": uptime,
+        "uptime_seconds": uptime_seconds,
         "total_requests": request_count,
+        "total_errors": error_count,
+        "average_latency_ms": avg_latency_ms,
     }
 
 # ---------------------------------------
