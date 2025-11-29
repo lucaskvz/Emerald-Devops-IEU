@@ -5,11 +5,12 @@ I added CORS middleware to allow my React frontend to communicate with the API.
 """
 
 # main.py
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from sqlalchemy.orm import Session
 import crud, schemas, database
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import HTTPException
+import time
 
 # Constants
 CORS_ORIGIN = "http://localhost:3000"
@@ -29,6 +30,43 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ---------------------------------------
+# MONITORING + HEALTH CHECK SECTION
+# ---------------------------------------
+
+startup_time = time.time()
+request_count = 0
+
+
+@app.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    """Middleware to count total requests."""
+    global request_count
+    request_count += 1
+    response = await call_next(request)
+    return response
+
+
+@app.get("/health")
+def health():
+    """Simple Azure health check endpoint."""
+    return {"status": "healthy", "service": "emerald-ledger-api"}
+
+
+@app.get("/metrics")
+def metrics():
+    """Basic monitoring metrics required for assignment."""
+    uptime = time.time() - startup_time
+
+    return {
+        "uptime_seconds": uptime,
+        "total_requests": request_count,
+    }
+
+# ---------------------------------------
+# END MONITORING SECTION
+# ---------------------------------------
+
 
 def _raise_not_found(entity_name: str):
     """Helper to raise 404 HTTPException for not found entities."""
@@ -45,9 +83,11 @@ def _raise_not_found(entity_name: str):
 def create_emerald(emerald: schemas.EmeraldLotCreate, db: Session = Depends(database.get_db)):
     return crud.create_emerald(db, emerald)
 
+
 @app.get("/emeralds/", response_model=list[schemas.EmeraldLotRead])
 def read_emeralds(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
     return crud.get_emeralds(db, skip, limit)
+
 
 @app.delete("/emeralds/{emerald_id}", response_model=schemas.EmeraldLotRead)
 def delete_emerald(emerald_id: int, db: Session = Depends(database.get_db)):
@@ -56,6 +96,7 @@ def delete_emerald(emerald_id: int, db: Session = Depends(database.get_db)):
         _raise_not_found("Emerald")
     return crud.delete_emerald(db, emerald_id)
 
+
 @app.put("/emeralds/{emerald_id}", response_model=schemas.EmeraldLotRead)
 def update_emerald(emerald_id: int, emerald: schemas.EmeraldLotCreate, db: Session = Depends(database.get_db)):
     return crud.update_emerald(db, emerald_id, emerald)
@@ -63,37 +104,22 @@ def update_emerald(emerald_id: int, emerald: schemas.EmeraldLotCreate, db: Sessi
 
 # Counterparties
 @app.post("/counterparties/", response_model=schemas.CounterpartyRead)
-def create_counterparty(
-    cp: schemas.CounterpartyCreate,
-    db: Session = Depends(database.get_db)
-):
+def create_counterparty(cp: schemas.CounterpartyCreate, db: Session = Depends(database.get_db)):
     return crud.create_counterparty(db, cp)
 
 
 @app.get("/counterparties/", response_model=list[schemas.CounterpartyRead])
-def read_counterparties(
-    # I use CounterpartyUpdate here instead of CounterpartyCreate to allow partial updates
-    skip: int = 0, limit: int = 100,
-    db: Session = Depends(database.get_db)
-):
+def read_counterparties(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
     return crud.get_counterparties(db, skip, limit)
 
 
 @app.put("/counterparties/{cp_id}", response_model=schemas.CounterpartyRead)
-def update_counterparty(
-    # I return a dict instead of the model to avoid response validation issues
-    cp_id: int,
-    cp: schemas.CounterpartyUpdate,
-    db: Session = Depends(database.get_db)
-):
+def update_counterparty(cp_id: int, cp: schemas.CounterpartyUpdate, db: Session = Depends(database.get_db)):
     return crud.update_counterparty(db, cp_id, cp)
 
 
 @app.delete("/counterparties/{cp_id}")
-def delete_counterparty(
-    cp_id: int,
-    db: Session = Depends(database.get_db)
-):
+def delete_counterparty(cp_id: int, db: Session = Depends(database.get_db)):
     try:
         result = crud.delete_counterparty(db, cp_id)
         if not result:
@@ -103,6 +129,7 @@ def delete_counterparty(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete counterparty: {str(e)}")
+
 
 # Trades
 @app.post("/trades/", response_model=schemas.TradeRead)
@@ -138,10 +165,12 @@ def delete_trade(trade_id: int, db: Session = Depends(database.get_db)):
         _raise_not_found("Trade")
     return db_trade
 
+
 # Reports
 @app.get("/reports/inventory")
 def report_inventory(db: Session = Depends(database.get_db)):
     return crud.get_inventory(db)
+
 
 @app.get("/reports/pnl")
 def report_pnl(db: Session = Depends(database.get_db)):
