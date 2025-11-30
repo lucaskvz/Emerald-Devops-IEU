@@ -110,7 +110,8 @@ This script:
 
 - **Minimum Coverage**: 90% (configured in `pytest.ini`)
 - **Coverage Reports**: 
-  - HTML report: `htmlcov/index.html`
+  - HTML report: `htmlcov/index.html` (generated locally)
+  - Archived reports: `coverage reports/` folder (contains zipped coverage reports from CI/CD)
   - Terminal output: Shows missing lines
 - **Coverage Configuration**: Defined in `pytest.ini` with `--cov-fail-under=90`
 
@@ -159,7 +160,7 @@ The `.dockerignore` file excludes:
 - Virtual environment (`.venv`)
 - Python cache (`__pycache__`)
 - Git files (`.git`)
-- Coverage reports (`htmlcov`)
+- Coverage reports (`htmlcov`, `coverage reports/`)
 - Test database files (`*.db`, except `emerald.db`)
 - Test files (`tests/`)
 
@@ -203,8 +204,10 @@ The CI pipeline runs on:
    - Validates imports to ensure no syntax errors
 
 7. **Upload Coverage Reports**
-   - Uploads `coverage.xml` and `htmlcov/` as artifacts
+   - Uploads `coverage.xml` and `htmlcov/` as GitHub Actions artifacts
+   - Artifacts are available for download from GitHub Actions runs
    - Retention: 30 days
+   - Archived reports may be stored in `coverage reports/` folder
 
 ---
 
@@ -337,7 +340,8 @@ Emerald-Devops-IEU/
 │   ├── test_api.py             # API endpoint integration tests
 │   ├── test_crud.py            # CRUD operation unit tests
 │   └── test_models.py          # Database model unit tests
-├── htmlcov/                    # Coverage report HTML files (generated)
+├── htmlcov/                    # Coverage report HTML files (generated locally)
+├── coverage reports/           # Archived coverage reports from CI/CD (zip files)
 ├── __pycache__/                # Python bytecode cache
 ├── .dockerignore               # Docker build exclusions
 ├── crud.py                     # CRUD operations for all entities
