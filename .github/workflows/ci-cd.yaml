@@ -1,0 +1,48 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # ----------- BUILD DOCKER IMAGE -----------
+      - name: Build Docker image
+        run: |
+          IMAGE="${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/emerald-app:latest"
+          echo "Building image: $IMAGE"
+          docker build -t "$IMAGE" .
+
+      # ----------- LOGIN TO ACR -----------
+      - name: Login to ACR
+        run: |
+          echo "${{ secrets.AZURE_REGISTRY_PASSWORD }}" | docker login ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }} \
+            -u ${{ secrets.AZURE_REGISTRY_USERNAME }} --password-stdin
+
+      # ----------- PUSH TO ACR -----------
+      - name: Push image to ACR
+        run: |
+          IMAGE="${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/emerald-app:latest"
+          echo "Pushing image: $IMAGE"
+          docker push "$IMAGE"
+
+      # ----------- DEPLOY -----------
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          images: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/emerald-app:latest

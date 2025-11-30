@@ -4,7 +4,9 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
 from models import Base
 
+# Constants
 DATABASE_URL = "sqlite:///./emerald.db"
+SQLITE_FOREIGN_KEYS_PRAGMA = "PRAGMA foreign_keys=ON"
 
 engine = create_engine(
     DATABASE_URL, connect_args={"check_same_thread": False}
@@ -16,7 +18,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     """I enable foreign key constraints on SQLite connections to enforce referential integrity."""
     try:
         cursor = dbapi_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.execute(SQLITE_FOREIGN_KEYS_PRAGMA)
         cursor.close()
     except Exception:
         pass  # ignore for non-sqlite drivers
