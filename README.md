@@ -110,7 +110,8 @@ This script:
 
 - **Minimum Coverage**: 90% (configured in `pytest.ini`)
 - **Coverage Reports**: 
-  - HTML report: `htmlcov/index.html`
+  - HTML report: `htmlcov/index.html` (generated locally)
+  - Archived reports: `coverage reports/` folder (contains zipped coverage reports from CI/CD)
   - Terminal output: Shows missing lines
 - **Coverage Configuration**: Defined in `pytest.ini` with `--cov-fail-under=90`
 
@@ -159,7 +160,7 @@ The `.dockerignore` file excludes:
 - Virtual environment (`.venv`)
 - Python cache (`__pycache__`)
 - Git files (`.git`)
-- Coverage reports (`htmlcov`)
+- Coverage reports (`htmlcov`, `coverage reports/`)
 - Test database files (`*.db`, except `emerald.db`)
 - Test files (`tests/`)
 
@@ -203,8 +204,10 @@ The CI pipeline runs on:
    - Validates imports to ensure no syntax errors
 
 7. **Upload Coverage Reports**
-   - Uploads `coverage.xml` and `htmlcov/` as artifacts
+   - Uploads `coverage.xml` and `htmlcov/` as GitHub Actions artifacts
+   - Artifacts are available for download from GitHub Actions runs
    - Retention: 30 days
+   - Archived reports may be stored in `coverage reports/` folder
 
 ---
 
@@ -275,25 +278,34 @@ The CD pipeline requires the following GitHub secrets:
 
 ### `/metrics`
 
-**Purpose**: Basic monitoring metrics for application observability.
+**Purpose**: Comprehensive monitoring metrics for application observability and performance tracking.
 
 **Method**: `GET`
 
 **Response**:
 ```json
 {
-  "uptime_seconds": 12345.67,
-  "total_requests": 42
+  "uptime_seconds": 1234.56,
+  "total_requests": 42,
+  "total_errors": 3,
+  "average_latency_ms": 4.87
 }
 ```
 
 **Metrics Explained**:
 - `uptime_seconds`: Time elapsed since application startup (in seconds)
-- `total_requests`: Total number of HTTP requests processed since startup (tracked via middleware)
+- `total_requests`: Total number of HTTP requests processed since startup
+- `total_errors`: Total number of HTTP errors encountered (4xx, 5xx status codes and unhandled exceptions)
+- `average_latency_ms`: Average request processing time in milliseconds
 
-**Implementation**: 
-- Uptime calculated from `startup_time` (recorded at application startup)
-- Request count incremented by `metrics_middleware` on each HTTP request
+**Monitoring Middleware Implementation**: 
+The `metrics_middleware` tracks the following metrics for each HTTP request:
+- **Total Requests**: Incremented on every incoming HTTP request
+- **Total Errors**: Counts HTTP 4xx and 5xx responses, as well as unhandled exceptions
+- **Average Latency**: Calculated from the cumulative latency of all requests divided by total request count (in milliseconds)
+- **Uptime**: Calculated from `startup_time` recorded at application startup
+
+The middleware uses `time.perf_counter()` for high-precision latency measurement and tracks errors by monitoring response status codes and catching exceptions during request processing.
 
 ### Accessing Monitoring Endpoints
 
@@ -328,7 +340,8 @@ Emerald-Devops-IEU/
 │   ├── test_api.py             # API endpoint integration tests
 │   ├── test_crud.py            # CRUD operation unit tests
 │   └── test_models.py          # Database model unit tests
-├── htmlcov/                    # Coverage report HTML files (generated)
+├── htmlcov/                    # Coverage report HTML files (generated locally)
+├── coverage reports/           # Archived coverage reports from CI/CD (zip files)
 ├── __pycache__/                # Python bytecode cache
 ├── .dockerignore               # Docker build exclusions
 ├── crud.py                     # CRUD operations for all entities
