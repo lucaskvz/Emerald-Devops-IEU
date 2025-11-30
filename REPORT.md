@@ -856,6 +856,30 @@ The investment in DevOps practices pays dividends through:
 
 ---
 
+## 6. AI Usage Disclosure
+
+### 6.1 AI-Assisted Development
+
+During the development of this project, AI tools were utilized to provide guidance and assistance, particularly in the areas of cloud deployment and containerization. The AI assistance was primarily used for:
+
+**Cloud Deployment Guidance**:
+- Understanding Azure Web App deployment workflows and configuration
+- Clarifying Azure Container Registry (ACR) authentication and image management
+- Guidance on setting up GitHub Actions workflows for Azure deployments
+- Troubleshooting deployment pipeline issues and error resolution
+
+**Containerization Support**:
+- Docker best practices and Dockerfile optimization strategies
+- Understanding Docker layer caching and image size optimization
+- Guidance on multi-stage builds and container security considerations
+- Assistance with local Docker testing and debugging
+
+### 6.2 Development Approach
+
+While AI tools provided valuable guidance and explanations, all implementation decisions, code writing, testing, and final configurations were performed by the myself. 
+
+---
+
 **Report Generated**: Assignment 2 - DevOps   
 **Project**: Emerald Ledger   
 **Date**: 2025
